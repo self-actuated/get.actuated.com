@@ -68,6 +68,27 @@ else
   echo "[!] ./agent/install.sh not found or not executable; skipping"
 fi
 
+# ---------- Install registry mirror ------------
+
+if [ ! "$SKIP_REGISTRY" == "true" ]; then
+  if [ -n "$DOCKER_USERNAME" ] && [ -n "$DOCKER_PASSWORD" ]; then
+    echo "[+] Installing registry mirror credentials"
+
+    sudo -E arkade system install registry \
+      --bind-addr "192.168.128.1:5000" \
+      --type mirror \
+      --tls=actuated \
+      --docker-username "$DOCKER_USERNAME" \
+      --docker-password "$DOCKER_PASSWORD" || echo "[!] Failed to install registry mirror; continuing (may be present already)"
+  else
+    echo "[+] Installing registry mirror with anonymous pull"
+    sudo -E arkade system install registry \
+      --bind-addr "192.168.128.1:5000" \
+      --type mirror \
+      --tls=actuated || echo "[!] Failed to install registry mirror; continuing continuing (may be present already)"
+  fi
+fi
+
 # ---------- Enroll and install service ----------
 echo "[+] Enrolling agent"
 if [ -n "$ENDPOINT" ]; then
@@ -80,27 +101,6 @@ fi
 
 echo "[+] Installing/starting system service"
 sudo -E agent install-service --listen-addr "0.0.0.0:"
-
-# ---------- Install registry mirror ------------
-
-if [ ! "$SKIP_REGISTRY" == "true" ]; then
-  if [ -n "$DOCKER_USERNAME" ] && [ -n "$DOCKER_PASSWORD" ]; then
-    echo "[+] Installing registry mirror credentials"
-
-    sudo -E arkade system install registry \
-      --bind-addr "192.168.128.1:5000" \
-      --type mirror \
-      --tls=actuated \
-      --docker-username "$DOCKER_USERNAME" \
-      --docker-password "$DOCKER_PASSWORD"
-  else
-    echo "[+] Installing registry mirror with anonymous pull"
-    sudo -E arkade system install registry \
-      --bind-addr "192.168.128.1:5000" \
-      --type mirror \
-      --tls=actuated
-  fi
-fi
 
 echo
 echo "✅ Actuated agent installed."
