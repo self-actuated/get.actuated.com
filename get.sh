@@ -23,9 +23,7 @@ fi
 # ---------- Write license ----------
 mkdir -p "${HOME}/.actuated"
 # Preserve exact content/newlines
-cat > "${HOME}/.actuated/LICENSE" <<'EOF_LICENSE'
-'"${LICENSE}"'
-EOF_LICENSE
+echo -n $LICENSE > "${HOME}/.actuated/LICENSE"
 
 # ---------- Always install arkade ----------
 echo "[+] Installing arkade"
