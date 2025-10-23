@@ -79,7 +79,7 @@ else
 fi
 
 echo "[+] Installing/starting system service"
-sudo -E agent install-service --listen-addr "0.0.0.0:" --home "$HOME"
+sudo -E agent install-service --listen-addr "0.0.0.0:"
 
 echo
 echo "✅ Actuated agent installed."
