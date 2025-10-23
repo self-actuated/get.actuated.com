@@ -12,6 +12,8 @@ VM_DEV="${VM_DEV:-}"                       # optional override; if empty we'll t
 BASE_SIZE="${BASE_SIZE:-}"                 # must be empty so downstream uses its own defaults
 SKIP_REGISTRY="${SKIP_REGISTRY:-}"         # optional; if set to "true" we skip registry mirror install
 LABELS="${LABELS:-}"                       # optional labels for the agent (as CSV)
+DOCKER_PASSWORD="${DOCKER_PASSWORD:-}"     # optional; for registry mirror auth
+DOCKER_USERNAME="${DOCKER_USERNAME:-}"     # optional; for registry mirror auth
 
 # Set HOME only if not already set
 if [ -z "${HOME:-}" ]; then
