@@ -62,7 +62,8 @@ fi
 if [ -x "./agent/install.sh" ]; then
   echo "[+] Running agent install.sh"
   # Pass VM_DEV and empty BASE_SIZE (downstream will default)
-  sudo -E env VM_DEV="$VM_DEV" BASE_SIZE="$BASE_SIZE" HOME="$HOME" ./agent/install.sh
+  cd agent
+  sudo -E env VM_DEV="$VM_DEV" BASE_SIZE="$BASE_SIZE" HOME="$HOME" ./install.sh
 else
   echo "[!] ./agent/install.sh not found or not executable; skipping"
 fi
