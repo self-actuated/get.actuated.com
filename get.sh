@@ -11,6 +11,7 @@ ENDPOINT="${ENDPOINT:-}"                   # optional
 VM_DEV="${VM_DEV:-}"                       # optional override; if empty we'll try finder
 BASE_SIZE="${BASE_SIZE:-}"                 # must be empty so downstream uses its own defaults
 SKIP_REGISTRY="${SKIP_REGISTRY:-}"         # optional; if set to "true" we skip registry mirror install
+LABELS="${LABELS:-}"                       # optional labels for the agent (as CSV)
 
 # Set HOME only if not already set
 if [ -z "${HOME:-}" ]; then
@@ -71,10 +72,10 @@ fi
 echo "[+] Enrolling agent"
 if [ -n "$ENDPOINT" ]; then
   sudo -E agent csr        --token "$TOKEN" --endpoint "$ENDPOINT" --home "$HOME"
-  sudo -E agent autoenroll --token "$TOKEN" --endpoint "$ENDPOINT" --home "$HOME"
+  sudo -E agent autoenroll --token "$TOKEN" --endpoint "$ENDPOINT" --labels "$LABELS" --home "$HOME"
 else
   sudo -E agent csr        --token "$TOKEN" --home "$HOME"
-  sudo -E agent autoenroll --token "$TOKEN" --home "$HOME"
+  sudo -E agent autoenroll --token "$TOKEN" --labels "$LABELS" --home "$HOME"
 fi
 
 echo "[+] Installing/starting system service"
