@@ -10,6 +10,7 @@ TOKEN="${TOKEN:-}"                         # Long lived API token for joining ag
 ENDPOINT="${ENDPOINT:-}"                   # optional
 VM_DEV="${VM_DEV:-}"                       # optional override; if empty we'll try finder
 BASE_SIZE="${BASE_SIZE:-}"                 # must be empty so downstream uses its own defaults
+SKIP_REGISTRY="${SKIP_REGISTRY:-}"         # optional; if set to "true" we skip registry mirror install
 
 # Set HOME only if not already set
 if [ -z "${HOME:-}" ]; then
@@ -78,6 +79,27 @@ fi
 
 echo "[+] Installing/starting system service"
 sudo -E agent install-service --listen-addr "0.0.0.0:"
+
+# ---------- Install registry mirror ------------
+
+if [ ! "$SKIP_REGISTRY" == "true" ]; then
+  if [ -n "$DOCKER_USERNAME" ] && [ -n "$DOCKER_PASSWORD" ]; then
+    echo "[+] Installing registry mirror credentials"
+
+    sudo -E arkade system install registry \
+      --bind-addr "192.168.128.1:5000" \
+      --type mirror \
+      --tls=actuated \
+      --docker-username "$DOCKER_USERNAME" \
+      --docker-password "$DOCKER_PASSWORD"
+  else
+    echo "[+] Installing registry mirror with anonymous pull"
+    sudo -E arkade system install registry \
+      --bind-addr "192.168.128.1:5000" \
+      --type mirror \
+      --tls=actuated
+  fi
+fi
 
 echo
 echo "✅ Actuated agent installed."
