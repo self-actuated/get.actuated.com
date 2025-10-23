@@ -105,4 +105,8 @@ echo
 echo "✅ Actuated agent installed."
 echo "   VM_DEV: ${VM_DEV:-<empty>}"
 echo "   HOME:   ${HOME}"
+if [ ! "$SKIP_REGISTRY" == "true" ]; then
+  echo "   REGISTRY MIRROR: OK."
+fi
 [ -n "$ENDPOINT" ] && echo "   Endpoint: ${ENDPOINT}"
+
