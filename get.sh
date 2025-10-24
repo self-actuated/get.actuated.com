@@ -16,6 +16,7 @@ DOCKER_PASSWORD="${DOCKER_PASSWORD:-}"     # optional; for registry mirror auth
 DOCKER_USERNAME="${DOCKER_USERNAME:-}"     # optional; for registry mirror auth
 IMAGE_REF="${IMAGE_REF:-}"                 # optional; OCI image ref for the agent
 KERNEL_REF="${KERNEL_REF:-}"               # optional; OCI image ref for the kernel
+SAN="${SAN:-}"                             # optional; Subject Alternative Name for TLS certs. Use when autodetection is failing
 
 # Set HOME only if not already set
 if [ -z "${HOME:-}" ]; then
@@ -96,11 +97,11 @@ fi
 # ---------- Enroll and install service ----------
 echo "[+] Enrolling agent"
 if [ -n "$ENDPOINT" ]; then
-  sudo -E agent csr        --token "$TOKEN" --endpoint "$ENDPOINT" --home "$HOME"
-  sudo -E agent autoenroll --token "$TOKEN" --endpoint "$ENDPOINT" --labels "$LABELS" --home "$HOME"
+  sudo -E agent csr        --token "$TOKEN" --endpoint "$ENDPOINT" --home "$HOME" --san "$SAN"
+  sudo -E agent autoenroll --token "$TOKEN" --endpoint "$ENDPOINT" --labels "$LABELS" --home "$HOME" --san "$SAN"
 else
-  sudo -E agent csr        --token "$TOKEN" --home "$HOME"
-  sudo -E agent autoenroll --token "$TOKEN" --labels "$LABELS" --home "$HOME"
+  sudo -E agent csr        --token "$TOKEN" --home "$HOME" --san "$SAN"
+  sudo -E agent autoenroll --token "$TOKEN" --labels "$LABELS" --home "$HOME" --san "$SAN"
 fi
 
 echo "[+] Installing/starting system service"
