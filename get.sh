@@ -14,6 +14,8 @@ SKIP_REGISTRY="${SKIP_REGISTRY:-}"         # optional; if set to "true" we skip 
 LABELS="${LABELS:-}"                       # optional labels for the agent (as CSV)
 DOCKER_PASSWORD="${DOCKER_PASSWORD:-}"     # optional; for registry mirror auth
 DOCKER_USERNAME="${DOCKER_USERNAME:-}"     # optional; for registry mirror auth
+IMAGE_REF="${IMAGE_REF:-}"                 # optional; OCI image ref for the agent
+KERNEL_REF="${KERNEL_REF:-}"               # optional; OCI image ref for the kernel
 
 # Set HOME only if not already set
 if [ -z "${HOME:-}" ]; then
@@ -102,7 +104,13 @@ else
 fi
 
 echo "[+] Installing/starting system service"
-sudo -E agent install-service --listen-addr "0.0.0.0:"
+if [ -n "$IMAGE_REF" ] || [ -n "$KERNEL_REF" ]; then
+  echo "[=] Using custom image/kernel references"
+  sudo -E agent install-service --image-ref "$IMAGE_REF" --kernel-ref "$KERNEL_REF" --listen-addr "0.0.0.0:"
+else
+  echo "[=] Using default image/kernel references"
+  sudo -E agent install-service --listen-addr "0.0.0.0:"
+fi
 
 echo
 echo "✅ Actuated agent installed."
