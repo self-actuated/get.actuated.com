@@ -130,11 +130,15 @@ if [ $? -eq 0 ] && [ -n "$GCP_TEST" ]; then
 [Unit]
 Description=Reset actuated pool
 After=local-fs.target
-Before=actuated.service
+Before=actuated.service containerd.service
 
 [Service]
 Type=oneshot
+# Even though the disk is wiped, it may contain a filesystem header that needs to be removed.
 ExecStartPre=wipefs -f -a ${VM_DEV}
+# Containerd thinks the snapshots still exist in devmapper, so we have to "reset" it
+ExecStartPre=rm -rf /var/lib/containerd
+# Run the reset-pool.sh script to reset the pool.
 ExecStart=/usr/local/bin/reset-pool.sh
 Environment=VM_DEV=${VM_DEV}
 RemainAfterExit=true
