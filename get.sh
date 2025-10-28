@@ -124,35 +124,36 @@ fi
 
 GCP_TEST="$(curl -s --connect-timeout 0.1 -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/hostname 2>/dev/null | head -n1)"
 if [ $? -eq 0 ] && [ -n "$GCP_TEST" ]; then
-  echo "[+] Detected GCP environment; setting up disk format of VM_DEV ($VM_DEV) on reboot"
+  if [ -n "$VM_DEV" ]; then
+    echo "[+] Detected GCP environment; installing reset-pool.service for ($VM_DEV)"
 
-  cat <<EOF | sudo tee /etc/systemd/system/reset-pool.service > /dev/null
-[Unit]
-Description=Reset actuated pool
-After=local-fs.target
-Before=actuated.service containerd.service
+    cat <<EOF | sudo tee /etc/systemd/system/reset-pool.service > /dev/null
+  [Unit]
+  Description=Reset actuated pool
+  After=local-fs.target
+  Before=actuated.service containerd.service
 
-[Service]
-Type=oneshot
-# Even though the disk is wiped, it may contain a filesystem header that needs to be removed.
-ExecStartPre=wipefs -f -a ${VM_DEV}
-# Containerd thinks the snapshots still exist in devmapper, so we have to "reset" it
-ExecStartPre=rm -rf /var/lib/containerd
-# Run the reset-pool.sh script to reset the pool.
-ExecStart=/usr/local/bin/reset-pool.sh
-Environment=VM_DEV=${VM_DEV}
-RemainAfterExit=true
-Restart=no
-User=root
+  [Service]
+  Type=oneshot
+  # Even though the disk is wiped, it may contain a filesystem header that needs to be removed.
+  ExecStartPre=wipefs -f -a ${VM_DEV}
+  # Containerd thinks the snapshots still exist in devmapper, so we have to "reset" it
+  ExecStartPre=rm -rf /var/lib/containerd
+  # Run the reset-pool.sh script to reset the pool.
+  ExecStart=/usr/local/bin/reset-pool.sh
+  Environment=VM_DEV=${VM_DEV}
+  RemainAfterExit=true
+  Restart=no
+  User=root
 
-[Install]
-WantedBy=multi-user.target
-EOF
+  [Install]
+  WantedBy=multi-user.target
+  EOF
 
-  sudo systemctl daemon-reload && 
-    sudo systemctl enable reset-pool.service
+    sudo systemctl daemon-reload && 
+      sudo systemctl enable reset-pool.service
+    fi
 fi
-
 
 echo
 echo "✅ Actuated agent installed."
