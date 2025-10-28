@@ -7,10 +7,6 @@ set -euo pipefail
 # On GCP, SSDs are ephemeral and wiped on every reboot.
 # Therefore, an additional "reset-pool" service is added to run before actuated.
 
-# SAN autodetection can fail if the public IP isn't listed on an interface, then you should
-# use AWS' IP finder:
-# SAN="$(curl -s http://checkip.amazonaws.com)"
-
 # ---------- User-provided env (override when running) ----------
 LICENSE="${LICENSE:-}"                     # License purchased from subscribe.openfaas.com
 TOKEN="${TOKEN:-}"                         # Long lived API token for joining agents
@@ -23,7 +19,7 @@ DOCKER_PASSWORD="${DOCKER_PASSWORD:-}"     # optional; for registry mirror auth
 DOCKER_USERNAME="${DOCKER_USERNAME:-}"     # optional; for registry mirror auth
 IMAGE_REF="${IMAGE_REF:-}"                 # optional; OCI image ref for the agent
 KERNEL_REF="${KERNEL_REF:-}"               # optional; OCI image ref for the kernel
-SAN="${SAN:-}"                             # optional; Subject Alternative Name for TLS certs. Use when autodetection is failing
+SAN="${SAN:-}"                             # optional; Subject Alternative Name for TLS certs. Use when autodetection is failing. "" or "public" will use checkip.amazon.com to find IP. "egress" will make an outbound connection and capture the IP used (needed for private networks)
 
 # Set HOME only if not already set
 if [ -z "${HOME:-}" ]; then
