@@ -4,6 +4,13 @@ set -euo pipefail
 # Actuated Agent installer.
 # Copyright OpenFaaS Ltd 2025
 
+# On GCP, SSDs are ephemeral and wiped on every reboot.
+# Therefore, an additional "reset-pool" service is added to run before actuated.
+
+# SAN autodetection can fail if the public IP isn't listed on an interface, then you should
+# use AWS' IP finder:
+# SAN="$(curl -s http://checkip.amazonaws.com)"
+
 # ---------- User-provided env (override when running) ----------
 LICENSE="${LICENSE:-}"                     # License purchased from subscribe.openfaas.com
 TOKEN="${TOKEN:-}"                         # Long lived API token for joining agents
@@ -43,7 +50,9 @@ arkade oci install ghcr.io/openfaasltd/actuated-agent:latest --path ./agent
 
 echo "[+] Installing agent binaries to /usr/local/bin"
 chmod +x ./agent/agent* || true
-sudo mv ./agent/agent* /usr/local/bin/
+chmod +x ./agent/*.sh || true
+sudo cp ./agent/agent* /usr/local/bin/
+sudo cp ./agent/reset-pool.sh /usr/local/bin/
 
 # ---------- Select VM_DEV (respect override; else try finder; else empty) ----------
 if [ -z "$VM_DEV" ]; then
@@ -112,6 +121,38 @@ else
   echo "[=] Using default image/kernel references"
   sudo -E agent install-service --listen-addr "0.0.0.0:"
 fi
+
+# If we're in GCP, then SSDs are erased/wiped on every reboot.
+# Create a systemd service to run /usr/local/bin/reset-pool.sh on 
+# boot, making sure we capture VM_DEV
+
+GCP_TEST="$(curl -s --connect-timeout 0.1 -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/hostname 2>/dev/null | head -n1)"
+if [ $? -eq 0 ] && [ -n "$GCP_TEST" ]; then
+  echo "[+] Detected GCP environment; setting up disk format of VM_DEV ($VM_DEV) on reboot"
+
+  cat <<EOF | sudo tee /etc/systemd/system/reset-pool.service > /dev/null
+[Unit]
+Description=Reset actuated pool
+After=local-fs.target
+Before=actuated.service
+
+[Service]
+Type=oneshot
+ExecStartPre=wipefs -f -a ${VM_DEV}
+ExecStart=/usr/local/bin/reset-pool.sh
+Environment=VM_DEV=${VM_DEV}
+RemainAfterExit=true
+Restart=no
+User=root
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+  sudo systemctl daemon-reload && 
+    sudo systemctl enable reset-pool.service
+fi
+
 
 echo
 echo "✅ Actuated agent installed."
