@@ -47,7 +47,13 @@ arkade oci install ghcr.io/openfaasltd/actuated-agent:latest --path ./agent
 echo "[+] Installing agent binaries to /usr/local/bin"
 chmod +x ./agent/agent* || true
 chmod +x ./agent/*.sh || true
-sudo cp ./agent/agent* /usr/local/bin/
+
+arch=$(uname -m)
+if [[ "$arch" == "aarch64" ]]; then
+    AGENT_SUFFIX="-arm64"
+fi
+
+sudo cp ./agent/agent${AGENT_SUFFIX:-""} /usr/local/bin/agent
 sudo cp ./agent/reset-pool.sh /usr/local/bin/
 
 # ---------- Select VM_DEV (respect override; else try finder; else empty) ----------
@@ -119,7 +125,7 @@ else
 fi
 
 # If we're in GCP, then SSDs are erased/wiped on every reboot.
-# Create a systemd service to run /usr/local/bin/reset-pool.sh on 
+# Create a systemd service to run /usr/local/bin/reset-pool.sh on
 # boot, making sure we capture VM_DEV
 
 GCP_TEST="$(curl -s --connect-timeout 0.1 -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/hostname 2>/dev/null | head -n1)"
@@ -150,7 +156,7 @@ User=root
 WantedBy=multi-user.target
 EOF
 
-    sudo systemctl daemon-reload && 
+      sudo systemctl daemon-reload && \
       sudo systemctl enable reset-pool.service
     fi
 fi
@@ -163,4 +169,3 @@ if [ ! "$SKIP_REGISTRY" == "true" ]; then
   echo "   REGISTRY MIRROR: OK."
 fi
 [ -n "$ENDPOINT" ] && echo "   Endpoint: ${ENDPOINT}"
-
