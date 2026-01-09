@@ -53,7 +53,7 @@ if [[ "$arch" == "aarch64" ]]; then
     AGENT_SUFFIX="-arm64"
 fi
 
-sudo cp ./agent/agent${AGENT_SUFFIX:-""} /usr/local/bin/agent
+sudo cp ./agent/agent${AGENT_SUFFIX:-""} /usr/local/bin/agent || echo "[!] Failed to copy agent binary, may be in running already"
 sudo cp ./agent/reset-pool.sh /usr/local/bin/
 
 # ---------- Select VM_DEV (respect override; else try finder; else empty) ----------
